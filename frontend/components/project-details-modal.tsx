@@ -8,27 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-type ProjectUser = {
-  id: string
-  name: string
-  image: string
-  role: string
-  lastCheckIn: {
-    pastWeek: string
-    nextWeek: string
-    quarterGoals: string
-  }
-}
-
-type Project = {
-  id: string
-  name: string
-  description: string
-  status: "active" | "completed" | "on-hold"
-  todos: string[]
-  users: ProjectUser[]
-}
+import { Project, ProjectUser } from "@/types/project"
 
 type ProjectDetailsModalProps = {
   project: Project

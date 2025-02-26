@@ -3,12 +3,15 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Github, Trello, FileText } from "lucide-react"
+import { Github, Trello, FileText, Plus } from "lucide-react"
 import { ProjectDetailsModal } from "@/components/project-details-modal"
+import { CreateProjectModal } from "@/components/create-project-modal"
+import type { Project } from "@/types/project"
 
-const projects = [
+const projects: Project[] = [
   {
     id: "1",
     name: "Website Redesign",
@@ -16,9 +19,39 @@ const projects = [
     status: "active",
     todos: ["Finalize homepage design", "Implement responsive layout", "Integrate CMS", "Conduct user testing"],
     team: [
-      { id: "1", name: "Alice", image: "/placeholder.svg", role: "Project Manager" },
-      { id: "2", name: "Bob", image: "/placeholder.svg", role: "UI Designer" },
-      { id: "3", name: "Charlie", image: "/placeholder.svg", role: "Frontend Developer" },
+      { 
+        id: "1", 
+        name: "Alice", 
+        image: "/placeholder.svg", 
+        role: "Project Manager",
+        lastCheckIn: {
+          pastWeek: "Finalized project timeline and assigned tasks to team members.",
+          nextWeek: "Begin stakeholder interviews and create initial wireframes.",
+          quarterGoals: "On track to complete the redesign by end of Q2.",
+        }
+      },
+      { 
+        id: "2", 
+        name: "Bob", 
+        image: "/placeholder.svg", 
+        role: "UI Designer",
+        lastCheckIn: {
+          pastWeek: "Created mood boards and initial color schemes.",
+          nextWeek: "Start designing key pages based on approved wireframes.",
+          quarterGoals: "50% complete on creating the new design system.",
+        }
+      },
+      { 
+        id: "3", 
+        name: "Charlie", 
+        image: "/placeholder.svg", 
+        role: "Frontend Developer",
+        lastCheckIn: {
+          pastWeek: "Set up the new development environment and project structure.",
+          nextWeek: "Begin implementing the homepage design.",
+          quarterGoals: "Research and propose new frontend technologies to improve performance.",
+        }
+      },
     ],
     integrations: ["github", "trello", "docs"],
     users: [
@@ -73,10 +106,22 @@ const integrationIcons = {
 }
 
 export function ProjectGrid() {
-  const [selectedProject, setSelectedProject] = useState<(typeof projects)[0] | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const handleProjectCreated = () => {
+    // TODO: Refresh projects list
+  }
 
   return (
     <>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex-1" />
+        <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Create Project
+        </Button>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {projects.map((project) => (
           <Card
@@ -88,7 +133,7 @@ export function ProjectGrid() {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{project.name}</h3>
                 <div
-                  className={cn("h-2 w-2 rounded-full", statusColors[project.status as keyof typeof statusColors])}
+                  className={cn("h-2 w-2 rounded-full", statusColors[project.status])}
                 />
               </div>
               <p className="text-sm text-muted-foreground">{project.description}</p>
@@ -126,6 +171,11 @@ export function ProjectGrid() {
           onClose={() => setSelectedProject(null)}
         />
       )}
+      <CreateProjectModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onProjectCreated={handleProjectCreated}
+      />
     </>
   )
 }

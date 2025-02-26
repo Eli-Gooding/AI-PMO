@@ -4,3 +4,4 @@ globs:
 alwaysApply: false
 ---
 1. For new migration files, use the timestamp + description naming scheme
+2. For any quesitons on schema/policies, check the folder at backend/supabase/migrations
