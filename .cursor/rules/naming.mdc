@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+1. For new migration files, use the timestamp + description naming scheme
