@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
       } catch (err: any) {
-        console.error('Auth context error:', err);
+        console.error('Authentication error occurred');
         setError(err);
       } finally {
         setIsLoading(false);
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         subscription.unsubscribe();
       };
     } catch (err: any) {
-      console.error('Auth subscription error:', err);
+      console.error('Authentication state error occurred');
       setError(err);
       setIsLoading(false);
     }
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       router.push('/login');
     } catch (err: any) {
-      console.error('Sign out error:', err);
+      console.error('Sign out error occurred');
       setError(err);
     }
   };

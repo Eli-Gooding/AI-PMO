@@ -12,7 +12,7 @@ export default function AuthError({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error('Auth error:', error);
+    console.error('Authentication error occurred');
   }, [error]);
 
   return (

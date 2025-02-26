@@ -12,7 +12,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only redirect if we're not loading and there's no user
     if (!isLoading && !user) {
-      console.log('ProtectedRoute - No user found, redirecting to login');
       router.replace('/login');
     }
   }, [user, isLoading, router]);

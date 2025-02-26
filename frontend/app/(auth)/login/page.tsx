@@ -31,7 +31,6 @@ export default function Login() {
     setSuccessMessage(null);
 
     try {
-      console.log('Attempting sign in...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -41,19 +40,13 @@ export default function Login() {
 
       // Make sure we have a session
       if (data?.session) {
-        console.log('Sign in successful, session established:', {
-          userId: data.session.user.id,
-          expiresAt: data.session.expires_at
-        });
-
         // Force a hard redirect to ensure the session is picked up
         window.location.href = '/';
       } else {
-        console.log('Sign in successful but no session established');
         throw new Error('No session established after login');
       }
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('Authentication error occurred');
       setError(error.message || 'An error occurred during sign in');
     } finally {
       setLoading(false);
@@ -75,7 +68,7 @@ export default function Login() {
 
       if (error) throw error;
     } catch (error: any) {
-      console.error(`${provider} sign in error:`, error);
+      console.error(`OAuth sign in error occurred`);
       setError(error.message || `An error occurred during ${provider} sign in`);
       setLoading(false);
     }

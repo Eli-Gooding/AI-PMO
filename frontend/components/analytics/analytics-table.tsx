@@ -314,8 +314,8 @@ export function AnalyticsTable() {
               onClick={() => {
                 // Here you would typically trigger the report generation
                 console.log(
-                  "Generating report for selected projects:",
-                  table.getFilteredSelectedRowModel().rows.map((row) => row.original),
+                  "Generating report for project IDs:",
+                  table.getFilteredSelectedRowModel().rows.map((row) => row.original.id)
                 )
                 setIsReportDialogOpen(false)
               }}

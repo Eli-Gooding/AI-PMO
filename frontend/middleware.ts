@@ -3,20 +3,12 @@ import type { NextRequest } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
 export async function middleware(req: NextRequest) {
-  console.log('Middleware starting...', { path: req.nextUrl.pathname });
-  
   try {
     // Create a response object that we'll modify
     const res = NextResponse.next();
     
     // Initialize the Supabase client with both request and response
     const supabase = createMiddlewareClient({ req, res });
-    
-    // Log cookies for debugging
-    console.log('Middleware - Cookies:', {
-      cookies: req.cookies.getAll(),
-      path: req.nextUrl.pathname
-    });
 
     // Refresh the session and get the latest session data
     const {
@@ -25,22 +17,13 @@ export async function middleware(req: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (sessionError) {
-      console.error('Middleware - Session error:', sessionError);
+      console.error('Auth error occurred');
       // On session error, clear any existing cookies and redirect to login
       res.cookies.delete('sb-access-token');
       res.cookies.delete('sb-refresh-token');
       const redirectUrl = new URL('/login', req.url);
       return NextResponse.redirect(redirectUrl);
     }
-
-    // Log detailed session info
-    console.log('Middleware - Session details:', {
-      hasSession: !!session,
-      sessionExpiry: session?.expires_at,
-      accessToken: session?.access_token ? 'present' : 'missing',
-      refreshToken: session?.refresh_token ? 'present' : 'missing',
-      path: req.nextUrl.pathname
-    });
 
     // Check if the user is authenticated
     const isAuthenticated = !!session;
@@ -74,7 +57,7 @@ export async function middleware(req: NextRequest) {
     // Return the response with the updated auth cookie
     return res;
   } catch (error) {
-    console.error('Middleware error:', error);
+    console.error('Middleware error occurred');
     // On error, redirect to login
     const redirectUrl = new URL('/login', req.url);
     return NextResponse.redirect(redirectUrl);
