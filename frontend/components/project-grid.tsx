@@ -32,7 +32,6 @@ export function ProjectGrid() {
 
   const fetchProjects = async () => {
     try {
-      // Fetch projects the user is a member or owner of
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select(`
@@ -59,13 +58,9 @@ export function ProjectGrid() {
       if (projectsError) throw projectsError
 
       // Transform the data to match our Project type
-      const transformedProjects: Project[] = projectsData.map(project => ({
-        id: project.id,
-        name: project.project_name,
-        description: project.project_description,
-        status: project.project_status || 'active',
-        todos: [], // TODO: Add todos table and fetch them
-        team: [
+      const transformedProjects: Project[] = projectsData.map(project => {
+        // Combine owners and members into a single users array
+        const users = [
           ...project.project_owners.map((owner: any) => ({
             id: owner.user.id,
             name: owner.user.user_name,
@@ -88,10 +83,19 @@ export function ProjectGrid() {
               quarterGoals: ''
             }
           }))
-        ],
-        integrations: [], // TODO: Add integrations table and fetch them
-        users: [] // We'll populate this when opening the project details
-      }))
+        ]
+
+        return {
+          id: project.id,
+          name: project.project_name,
+          description: project.project_description,
+          status: project.project_status || 'active',
+          todos: [], // TODO: Add todos table and fetch them
+          team: users, // Use the same users array for team
+          integrations: [], // TODO: Add integrations table and fetch them
+          users // Add the users array
+        }
+      })
 
       setProjects(transformedProjects)
     } catch (error) {
