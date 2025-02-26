@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,89 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Github, Trello, FileText, Plus } from "lucide-react"
 import { ProjectDetailsModal } from "@/components/project-details-modal"
 import { CreateProjectModal } from "@/components/create-project-modal"
-import type { Project } from "@/types/project"
-
-const projects: Project[] = [
-  {
-    id: "1",
-    name: "Website Redesign",
-    description: "Complete overhaul of the company website with new branding",
-    status: "active",
-    todos: ["Finalize homepage design", "Implement responsive layout", "Integrate CMS", "Conduct user testing"],
-    team: [
-      { 
-        id: "1", 
-        name: "Alice", 
-        image: "/placeholder.svg", 
-        role: "Project Manager",
-        lastCheckIn: {
-          pastWeek: "Finalized project timeline and assigned tasks to team members.",
-          nextWeek: "Begin stakeholder interviews and create initial wireframes.",
-          quarterGoals: "On track to complete the redesign by end of Q2.",
-        }
-      },
-      { 
-        id: "2", 
-        name: "Bob", 
-        image: "/placeholder.svg", 
-        role: "UI Designer",
-        lastCheckIn: {
-          pastWeek: "Created mood boards and initial color schemes.",
-          nextWeek: "Start designing key pages based on approved wireframes.",
-          quarterGoals: "50% complete on creating the new design system.",
-        }
-      },
-      { 
-        id: "3", 
-        name: "Charlie", 
-        image: "/placeholder.svg", 
-        role: "Frontend Developer",
-        lastCheckIn: {
-          pastWeek: "Set up the new development environment and project structure.",
-          nextWeek: "Begin implementing the homepage design.",
-          quarterGoals: "Research and propose new frontend technologies to improve performance.",
-        }
-      },
-    ],
-    integrations: ["github", "trello", "docs"],
-    users: [
-      {
-        id: "1",
-        name: "Alice",
-        image: "/placeholder.svg",
-        role: "Project Manager",
-        lastCheckIn: {
-          pastWeek: "Finalized project timeline and assigned tasks to team members.",
-          nextWeek: "Begin stakeholder interviews and create initial wireframes.",
-          quarterGoals: "On track to complete the redesign by end of Q2.",
-        },
-      },
-      {
-        id: "2",
-        name: "Bob",
-        image: "/placeholder.svg",
-        role: "UI Designer",
-        lastCheckIn: {
-          pastWeek: "Created mood boards and initial color schemes.",
-          nextWeek: "Start designing key pages based on approved wireframes.",
-          quarterGoals: "50% complete on creating the new design system.",
-        },
-      },
-      {
-        id: "3",
-        name: "Charlie",
-        image: "/placeholder.svg",
-        role: "Frontend Developer",
-        lastCheckIn: {
-          pastWeek: "Set up the new development environment and project structure.",
-          nextWeek: "Begin implementing the homepage design.",
-          quarterGoals: "Research and propose new frontend technologies to improve performance.",
-        },
-      },
-    ],
-  },
-  // ... (add more projects with similar structure)
-]
+import type { Project, ProjectUser } from "@/types/project"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 const statusColors = {
   active: "bg-green-500",
@@ -106,11 +25,86 @@ const integrationIcons = {
 }
 
 export function ProjectGrid() {
+  const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const supabase = createClientComponentClient()
+
+  const fetchProjects = async () => {
+    try {
+      // Fetch projects the user is a member or owner of
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          project_name,
+          project_description,
+          project_status,
+          project_members (
+            user:users (
+              id,
+              user_name,
+              email
+            )
+          ),
+          project_owners (
+            user:users (
+              id,
+              user_name,
+              email
+            )
+          )
+        `)
+
+      if (projectsError) throw projectsError
+
+      // Transform the data to match our Project type
+      const transformedProjects: Project[] = projectsData.map(project => ({
+        id: project.id,
+        name: project.project_name,
+        description: project.project_description,
+        status: project.project_status || 'active',
+        todos: [], // TODO: Add todos table and fetch them
+        team: [
+          ...project.project_owners.map((owner: any) => ({
+            id: owner.user.id,
+            name: owner.user.user_name,
+            image: '/placeholder.svg',
+            role: 'Owner',
+            lastCheckIn: {
+              pastWeek: '',
+              nextWeek: '',
+              quarterGoals: ''
+            }
+          })),
+          ...project.project_members.map((member: any) => ({
+            id: member.user.id,
+            name: member.user.user_name,
+            image: '/placeholder.svg',
+            role: 'Member',
+            lastCheckIn: {
+              pastWeek: '',
+              nextWeek: '',
+              quarterGoals: ''
+            }
+          }))
+        ],
+        integrations: [], // TODO: Add integrations table and fetch them
+        users: [] // We'll populate this when opening the project details
+      }))
+
+      setProjects(transformedProjects)
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchProjects()
+  }, [])
 
   const handleProjectCreated = () => {
-    // TODO: Refresh projects list
+    fetchProjects()
   }
 
   return (
@@ -133,7 +127,7 @@ export function ProjectGrid() {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{project.name}</h3>
                 <div
-                  className={cn("h-2 w-2 rounded-full", statusColors[project.status])}
+                  className={cn("h-2 w-2 rounded-full", statusColors[project.status as keyof typeof statusColors])}
                 />
               </div>
               <p className="text-sm text-muted-foreground">{project.description}</p>
