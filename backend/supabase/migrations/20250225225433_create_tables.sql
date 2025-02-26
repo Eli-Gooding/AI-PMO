@@ -6,6 +6,7 @@
 create table users (
   id serial primary key,
   email text unique not null,
+  user_name text not null,
   is_member boolean default false,
   created_at timestamp with time zone default timezone('utc', now())
 );

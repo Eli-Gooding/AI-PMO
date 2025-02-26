@@ -1,60 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 
-export default function Login() {
+export default function SignUp() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    // Check for message in URL parameters
-    const message = searchParams?.get('message');
-    if (message) {
-      setSuccessMessage(message);
-    }
-  }, [searchParams]);
-
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
-      console.log('Attempting sign in...');
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+          data: {
+            name: name,
+          },
+        },
       });
 
       if (error) throw error;
-
-      // Make sure we have a session
-      if (data?.session) {
-        console.log('Sign in successful, session established:', {
-          userId: data.session.user.id,
-          expiresAt: data.session.expires_at
-        });
-
-        // Force a hard redirect to ensure the session is picked up
-        window.location.href = '/';
-      } else {
-        console.log('Sign in successful but no session established');
-        throw new Error('No session established after login');
-      }
+      
+      // Show success message or redirect
+      router.push('/login?message=Check your email to confirm your account');
     } catch (error: any) {
-      console.error('Sign in error:', error);
-      setError(error.message || 'An error occurred during sign in');
+      setError(error.message || 'An error occurred during sign up');
     } finally {
       setLoading(false);
     }
@@ -63,19 +46,20 @@ export default function Login() {
   const handleOAuthSignIn = async (provider: 'github' | 'google') => {
     setLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: {
+            ...(name ? { name } : {}),
+          },
         },
       });
 
       if (error) throw error;
     } catch (error: any) {
-      console.error(`${provider} sign in error:`, error);
       setError(error.message || `An error occurred during ${provider} sign in`);
       setLoading(false);
     }
@@ -84,21 +68,14 @@ export default function Login() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
       <div className="w-full max-w-md p-8 rounded-lg bg-[#111] border border-gray-800">
-        <h1 className="text-3xl font-bold text-center mb-2">Welcome back</h1>
-        <p className="text-gray-400 text-center mb-6">Enter your credentials to sign in to your account</p>
-        
-        {successMessage && (
-          <div className="mb-6 p-4 rounded bg-green-900/30 border border-green-800 text-green-400">
-            <p>{successMessage}</p>
-          </div>
-        )}
+        <h1 className="text-3xl font-bold text-center mb-2">Create an account</h1>
+        <p className="text-gray-400 text-center mb-6">Sign up to get started with AI-PMO</p>
         
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => handleOAuthSignIn('github')}
             className="flex items-center justify-center gap-2 w-1/2 py-2 px-4 rounded bg-[#1a1a1a] hover:bg-[#222] transition-colors border border-gray-800"
             disabled={loading}
-            type="button"
           >
             <FaGithub className="text-xl" />
             <span>GitHub</span>
@@ -107,7 +84,6 @@ export default function Login() {
             onClick={() => handleOAuthSignIn('google')}
             className="flex items-center justify-center gap-2 w-1/2 py-2 px-4 rounded bg-[#1a1a1a] hover:bg-[#222] transition-colors border border-gray-800"
             disabled={loading}
-            type="button"
           >
             <FcGoogle className="text-xl" />
             <span>Google</span>
@@ -123,7 +99,20 @@ export default function Login() {
           </div>
         </div>
         
-        <form onSubmit={handleSignIn}>
+        <form onSubmit={handleSignUp}>
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-sm font-medium mb-2">Full Name</label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+              className="w-full p-3 rounded bg-[#0a0a0a] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
             <input
@@ -138,12 +127,7 @@ export default function Login() {
           </div>
           
           <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <label htmlFor="password" className="block text-sm font-medium">Password</label>
-              <Link href="/forgot-password" className="text-sm text-green-500 hover:text-green-400">
-                Forgot password?
-              </Link>
-            </div>
+            <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
             <input
               id="password"
               type="password"
@@ -151,12 +135,14 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 rounded bg-[#0a0a0a] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
               required
+              minLength={6}
             />
+            <p className="mt-1 text-xs text-gray-500">Password must be at least 6 characters</p>
           </div>
           
           {error && (
             <div className="mb-4 p-3 rounded bg-red-900/30 border border-red-800 text-red-400 text-sm">
-              <p>{error}</p>
+              {error}
             </div>
           )}
           
@@ -165,14 +151,14 @@ export default function Login() {
             className="w-full py-3 rounded bg-green-600 hover:bg-green-700 transition-colors font-medium"
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Creating account...' : 'Sign up'}
           </button>
         </form>
         
         <p className="mt-6 text-center text-gray-400">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-green-500 hover:text-green-400">
-            Sign up
+          Already have an account?{' '}
+          <Link href="/login" className="text-green-500 hover:text-green-400">
+            Sign in
           </Link>
         </p>
       </div>
