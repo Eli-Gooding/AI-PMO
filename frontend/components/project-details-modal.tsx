@@ -8,27 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-type ProjectUser = {
-  id: string
-  name: string
-  image: string
-  role: string
-  lastCheckIn: {
-    pastWeek: string
-    nextWeek: string
-    quarterGoals: string
-  }
-}
-
-type Project = {
-  id: string
-  name: string
-  description: string
-  status: "active" | "completed" | "on-hold"
-  todos: string[]
-  users: ProjectUser[]
-}
+import { Project, ProjectUser } from "@/types/project"
 
 type ProjectDetailsModalProps = {
   project: Project
@@ -47,10 +27,10 @@ export function ProjectDetailsModal({ project, isOpen, onClose }: ProjectDetails
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[700px]" hideClose>
+        <DialogHeader className="relative">
           <DialogTitle className="text-2xl font-bold">{project.name}</DialogTitle>
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="absolute right-0 top-0" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
